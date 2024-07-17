@@ -6980,9 +6980,14 @@ void HandleUI(void)
 				break;
 			}
 		}
-
-		if (isXmlName(Selected_tmp))
+		
+		if (is_groovy()) //clean server
 		{
+			groovy_stop();
+		}
+		
+		if (isXmlName(Selected_tmp))
+		{ 
 			// find the RBF file from the XML
 			xml_load(getFullPath(Selected_tmp));
 		}
@@ -6993,6 +6998,10 @@ void HandleUI(void)
 		break;
 
 	case MENU_CORE_FILE_SELECTED2:
+		if (is_groovy()) //clean server
+		{
+			groovy_stop();
+		}
 		fpga_load_rbf(Selected_tmp, selPath);
 		menustate = MENU_NONE1;
 		break;
