@@ -16,6 +16,8 @@ else
 	Q := @
 endif
 
+_AF_XDP ?= 0
+
 INCLUDE	= -I./
 INCLUDE	+= -I./lib/libco
 INCLUDE	+= -I./lib/miniz
@@ -25,10 +27,13 @@ INCLUDE += -I./lib/zstd/lib
 INCLUDE += -I./lib/libchdr/include
 INCLUDE += -I./lib/bluetooth
 INCLUDE += -I./lib/serial_server/library
+
+ifeq ($(_AF_XDP), 1)
 INCLUDE += -I./lib/libelf
 INCLUDE += -I./lib/libbpf
 INCLUDE += -I./lib/libxdp
 INCLUDE += -I./support/groovy/kernel/usr/include
+endif
 
 BUILDDIR = bin
 
@@ -49,7 +54,9 @@ CPP_SRC = $(wildcard *.cpp) \
 IMG =     $(wildcard *.png)
 
 IMLIB2_LIB  = -Llib/imlib2 -lfreetype -lbz2 -lpng16 -lz -lImlib2
+ifeq ($(_AF_XDP), 1)
 AFXDP_LIB  = -lelf lib/libxdp/libxdp.a lib/libbpf/libbpf.a
+endif
 
 OBJ	= $(C_SRC:%.c=$(BUILDDIR)/%.c.o) $(CPP_SRC:%.cpp=$(BUILDDIR)/%.cpp.o) $(IMG:%.png=$(BUILDDIR)/%.png.o)
 DEP	= $(C_SRC:%.c=$(BUILDDIR)/%.c.d) $(CPP_SRC:%.cpp=$(BUILDDIR)/%.cpp.d)
@@ -71,6 +78,9 @@ ifeq ($(PROFILING),1)
 endif
 
 $(BUILDDIR)/$(PRJ): $(OBJ)
+ifeq ($(_AF_XDP), 1)
+DFLAGS += -D_AF_XDP
+endif
 	$(Q)$(info $@)
 	$(Q)$(CC) -o $@ $+ $(LFLAGS)
 	$(Q)cp $@ $@.elf
