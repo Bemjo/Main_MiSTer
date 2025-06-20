@@ -2003,7 +2003,7 @@ static void joy_digital(int jnum, uint64_t mask, uint32_t code, char press, int 
 			ev.type = EV_KEY;
 			ev.value = press;
 
-			int cfg_switch = menu_allow_cfg_switch() && (osdbtn & JOY_BTN2) && press;
+			int cfg_switch = cfg.enable_config_shortcuts && menu_allow_cfg_switch() && (osdbtn & JOY_BTN2) && press;
 
 			switch (mask)
 			{
