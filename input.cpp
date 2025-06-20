@@ -1841,7 +1841,7 @@ static inline float boxradf(const float angle)
 
 static void joy_apply_deadzone(int* x, int* y, const devInput* dev, const int stick) {
 	// Don't be fancy with such a small deadzone.
-	if (dev->deadzone <= 2) 
+	if (dev->deadzone <= 2)
 	{
 		if (dev->deadzone && (abs((*x > *y) == (*x > -*y) ? *x : *y) <= dev->deadzone))
 			*x = *y = 0;
@@ -1901,7 +1901,7 @@ static bool handle_autofire_toggle(int num, uint32_t mask, uint32_t code, char p
 			{
 				if (lastcode[num] == code) { // build up mask if multiple buttons map to same code
 					lastmask[num] |= mask; 	 // this can't happen at present but if it ever does it will work correctly
-											
+
 				} else {
 					lastcode[num] = code;
 					lastmask[num] = mask;
@@ -1925,7 +1925,7 @@ static bool handle_autofire_toggle(int num, uint32_t mask, uint32_t code, char p
 		{
 			char *strat = str;
 			inc_autofire_code(num, lastcode[num], lastmask[num]);
-			
+
 			// display autofire status for each button in the mask
 			FOR_EACH_SET_BIT(lastmask[num], btn) {
 				strat += sprintf(strat, "%s\n", joy_bnames[btn-4]);
@@ -2126,8 +2126,8 @@ static void joy_digital(int jnum, uint32_t mask, uint32_t code, char press, int 
 			ev.type = EV_KEY;
 			ev.value = press;
 
-			int cfg_switch = menu_allow_cfg_switch() && (osdbtn & JOY_BTN2) && press;
-			
+			int cfg_switch = cfg.enable_config_shortcuts && menu_allow_cfg_switch() && (osdbtn & JOY_BTN2) && press;
+
 			switch (mask)
 			{
 			case JOY_RIGHT:
@@ -2258,7 +2258,7 @@ static void joy_digital(int jnum, uint32_t mask, uint32_t code, char press, int 
 static bool joy_dir_is_diagonal(const int x, const int y)
 {
 	static const float JOY_DIAG_THRESHOLD = .85f;
-	
+
 	return
 		((x == 0) || (y == 0)) ? false :
 		((x == y) || (x == -y)) ? true :
@@ -3421,7 +3421,7 @@ static void input_cb(struct input_event *ev, struct input_absinfo *absinfo, int 
 						if (input[dev].has_map == 3) Info("This joystick is not defined");
 						input[dev].has_map = 1;
 					}
-					
+
 					for (uint i = 0; i < BTN_NUM; i++)
 					{
 						if (ev->code == (input[dev].map[i] & 0xFFFF) || ev->code == (input[dev].map[i] >> 16)) {
@@ -5105,21 +5105,21 @@ int input_test(int getchar)
 							input_lightgun_load(n);
 						}
 
-						//Sinden Lightgun (two different PIDs, four different PIDs depending on gun color/config)                                                                                                   
-						if ((input[n].vid == 0x16c0 || input[n].vid == 0x16d0) && (                             
-            					input[n].pid == 0x0f01 ||                             
-            					input[n].pid == 0x0f02 ||                             
-            					input[n].pid == 0x0f38 ||                             
-            					input[n].pid == 0x0f39))                             
-						{                             
-    							input[n].quirk = QUIRK_LIGHTGUN;                             
-    							input[n].lightgun = 1;                             
-    							input[n].guncal[0] = 0;                             
-    							input[n].guncal[1] = 65535;                             
-    							input[n].guncal[2] = 0;                             
-    							input[n].guncal[3] = 65535;                             
-    							input_lightgun_load(n);                             
-						} 
+						//Sinden Lightgun (two different PIDs, four different PIDs depending on gun color/config)
+						if ((input[n].vid == 0x16c0 || input[n].vid == 0x16d0) && (
+            					input[n].pid == 0x0f01 ||
+            					input[n].pid == 0x0f02 ||
+            					input[n].pid == 0x0f38 ||
+            					input[n].pid == 0x0f39))
+						{
+    							input[n].quirk = QUIRK_LIGHTGUN;
+    							input[n].lightgun = 1;
+    							input[n].guncal[0] = 0;
+    							input[n].guncal[1] = 65535;
+    							input[n].guncal[2] = 0;
+    							input[n].guncal[3] = 65535;
+    							input_lightgun_load(n);
+						}
 
 						//Madcatz Arcade Stick 360
 						if (input[n].vid == 0x0738 && input[n].pid == 0x4758) input[n].quirk = QUIRK_MADCATZ360;
@@ -5943,7 +5943,7 @@ int input_poll(int getchar)
 	static bool autofire_cfg_parsed = false;
  	if (!autofire_cfg_parsed) autofire_cfg_parsed = parse_autofire_cfg();
 	static uint32_t joy_mask_prev[NUMPLAYERS] = {};
-	
+
 	// FRAME_TICK compares against frame_timer's counter (updated elsewhere) and fires once per frame.
 	static uint32_t last_frame_count = 0;
 	if (FRAME_TICK(last_frame_count)) {

@@ -104,6 +104,7 @@ typedef struct {
 	char vfilter_interlace_default[1023];
 	char autofire_rates[256];
 
+  uint8_t enable_config_shortcuts;
 } cfg_t;
 
 extern cfg_t cfg;
