@@ -103,6 +103,7 @@ typedef struct {
 	char main[1024];
 	char vfilter_interlace_default[1023];
   uint8_t enable_config_shortcuts;
+  uint8_t osd_joypad_mask;
 } cfg_t;
 
 extern cfg_t cfg;

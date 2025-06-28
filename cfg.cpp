@@ -135,6 +135,7 @@ static const ini_var_t ini_vars[] =
 	{ "LOOKAHEAD", (void *)(&(cfg.lookahead)), UINT8, 0, 3 },
 	{ "MAIN", (void*)(&(cfg.main)), STRING, 0, sizeof(cfg.main) - 1 },
 	{"VFILTER_INTERLACE_DEFAULT", (void*)(&(cfg.vfilter_interlace_default)), STRING, 0, sizeof(cfg.vfilter_interlace_default) - 1 },
+  { "OSD_JOYPAD_MASK", (void *)(&(cfg.osd_joypad_mask)), UINT8, 0, 255 },
 };
 
 static const int nvars = (int)(sizeof(ini_vars) / sizeof(ini_var_t));
@@ -593,6 +594,7 @@ void cfg_parse()
 	cfg.video_saturation = 100;
 	cfg.video_hue = 0;
   cfg.enable_config_shortcuts = 1;
+  cfg.osd_joypad_mask = 0xFF;
 	strcpy(cfg.video_gain_offset, "1, 0, 1, 0, 1, 0");
 	strcpy(cfg.main, "MiSTer");
 	has_video_sections = false;
