@@ -105,6 +105,7 @@ typedef struct {
 	char autofire_rates[256];
 
   uint8_t enable_config_shortcuts;
+  uint8_t osd_joypad_mask;
 } cfg_t;
 
 extern cfg_t cfg;
