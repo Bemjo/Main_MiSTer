@@ -1966,6 +1966,9 @@ static void joy_digital(int jnum, uint64_t mask, uint32_t code, char press, int 
 
 		if (user_io_osd_is_visible() || (bnum == BTN_OSD))
 		{
+      if (bnum == BTN_OSD && jnum > 0 && !((1 << num) & cfg.osd_joypad_mask))
+        return;
+
 			mask &= ~JOY_BTN3;
 			if (press)
 			{
@@ -2076,7 +2079,7 @@ static void joy_digital(int jnum, uint64_t mask, uint32_t code, char press, int 
 				break;
 
 			default:
-				ev.code = (bnum == BTN_OSD) ? KEY_MENU : 0;
+				ev.code = ((((1 << num) & cfg.osd_joypad_mask) || jnum == 0) && bnum == BTN_OSD) ? KEY_MENU : 0;
 			}
 
 			input_cb(&ev, 0, 0);
