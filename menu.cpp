@@ -237,7 +237,7 @@ const char *config_stereo_msg[] = { "0%", "25%", "50%", "100%" };
 const char *config_uart_msg[] = { "      None", "       PPP", "   Console", "      MIDI", "     Modem"};
 const char *config_midilink_mode[] = {"Local", "Local", "  USB", "  UDP", "-----", "-----", "  USB" };
 const char *config_afilter_msg[] = { "Internal","Custom" };
-const char *config_smask_msg[] = { "None", "1x", "2x", "1x Rotated", "2x Rotated" };
+const char *config_smask_msg[] = { "None", "1x", "2x", "1x Rotated", "2x Rotated", "Same" };
 const char *config_scale[] = { "Normal", "V-Integer", "HV-Integer-", "HV-Integer+", "HV-Integer", "???", "???", "???" };
 
 #define DPAD_NAMES 4
@@ -990,6 +990,7 @@ void HandleUI(void)
 	static char addon[1024];
 	static int store_name;
 	static int vfilter_type;
+  static int shmask_type;
 	static int old_volume = 0;
 	static uint32_t lock_pass_timeout = 0;
 	static uint32_t menu_timeout = 0;
@@ -2921,20 +2922,30 @@ void HandleUI(void)
 			MenuWrite(n++, s, menusub == 10, (video_get_gamma_en() <= 0) || !S_ISDIR(getFileType(GAMMA_DIR)));
 
 			MenuWrite(n++);
-			sprintf(s, " Shadow Mask - %s", (video_get_shadow_mask_mode() < 0) ? config_smask_msg[0] : config_smask_msg[video_get_shadow_mask_mode()]);
-			MenuWrite(n++, s, menusub == 11, video_get_shadow_mask_mode() < 0);
+			sprintf(s, " Shadow Mask - %s", (video_get_shadow_mask_mode(SHMASK_STD) < 0) ? config_smask_msg[0] : config_smask_msg[video_get_shadow_mask_mode(SHMASK_STD)]);
+			MenuWrite(n++, s, menusub == 11, video_get_shadow_mask_mode(SHMASK_STD) < 0);
 			strcpy(s, " ");
-			if (strlen(video_get_shadow_mask())) strncat(s, video_get_shadow_mask(), 25);
+			if (strlen(video_get_shadow_mask(SHMASK_STD))) strncat(s, video_get_shadow_mask(SHMASK_STD), 25);
 			else strcpy(s, " < none >");
 			while (strlen(s) < 26) strcat(s, " ");
 			strcat(s, " \x16 ");
-			MenuWrite(n++, s, menusub == 12, (video_get_shadow_mask_mode() <= 0) || !S_ISDIR(getFileType(SMASK_DIR)));
+			MenuWrite(n++, s, menusub == 12, (video_get_shadow_mask_mode(SHMASK_STD) <= 0) || !S_ISDIR(getFileType(SMASK_DIR)));
+
+      MenuWrite(n++);
+			sprintf(s, " Shadow Intl - %s", (video_get_shadow_mask_mode(SHMASK_ILACE) < 0) ? config_smask_msg[0] : config_smask_msg[video_get_shadow_mask_mode(SHMASK_ILACE)]);
+			MenuWrite(n++, s, menusub == 13, video_get_shadow_mask_mode(SHMASK_ILACE) < 0);
+			strcpy(s, " ");
+			if (strlen(video_get_shadow_mask(SHMASK_ILACE))) strncat(s, video_get_shadow_mask(SHMASK_ILACE), 25);
+			else strcpy(s, " < none >");
+			while (strlen(s) < 26) strcat(s, " ");
+			strcat(s, " \x16 ");
+			MenuWrite(n++, s, menusub == 14, (video_get_shadow_mask_mode(SHMASK_ILACE) <= 0) || (video_get_shadow_mask_mode(SHMASK_ILACE) >= 5) || !S_ISDIR(getFileType(SMASK_DIR)));
 
 			MenuWrite(n++);
-			MenuWrite(n++, " Reset to Defaults", menusub == 13);
+			MenuWrite(n++, " Reset to Defaults", menusub == 15);
 
 			MenuWrite(n++);
-			MenuWrite(n++, STD_BACK, menusub == 14);
+			MenuWrite(n++, STD_BACK, menusub == 16);
 
 			if (!adjvisible) break;
 			firstmenu += adjvisible;
@@ -2965,7 +2976,7 @@ void HandleUI(void)
 		{
 			if (menusub == 9)
 			{
-				video_set_shadow_mask_mode(video_get_shadow_mask_mode() + (plus ? 1 : -1));
+				video_set_shadow_mask_mode(shmask_type, video_get_shadow_mask_mode(shmask_type) + (plus ? 1 : -1));
 			}
 
 			switch (menusub)
@@ -2991,10 +3002,12 @@ void HandleUI(void)
 				break;
 
 			case 12:
-				if (video_get_shadow_mask_mode() > 0)
+      case 14:
+        shmask_type = (menusub == 12) ? SHMASK_STD : SHMASK_ILACE;
+				if (video_get_shadow_mask_mode(shmask_type) > 0)
 				{
-					const char *newfile = flist_GetPrevNext(SMASK_DIR, video_get_shadow_mask(0), "TXT", plus);
-					video_set_shadow_mask(newfile ? newfile : "");
+					const char *newfile = flist_GetPrevNext(SMASK_DIR, video_get_shadow_mask(shmask_type, 0), "TXT", plus);
+					video_set_shadow_mask(shmask_type, newfile ? newfile : "");
 				}
 				break;
 			}
@@ -3054,25 +3067,29 @@ void HandleUI(void)
 				break;
 
 			case 11:
-				if (video_get_shadow_mask_mode() >= 0) video_set_shadow_mask_mode(video_get_shadow_mask_mode() + 1);
+      case 13:
+        shmask_type = (menusub == 11) ? SHMASK_STD : SHMASK_ILACE;
+				if (video_get_shadow_mask_mode(shmask_type) >= 0) video_set_shadow_mask_mode(shmask_type, video_get_shadow_mask_mode(shmask_type) + 1);
 				menustate = parentstate;
 				break;
 
 			case 12:
-				if (video_get_shadow_mask_mode() > 0)
+      case 14:
+        shmask_type = (menusub == 12) ? SHMASK_STD : SHMASK_ILACE;
+				if (video_get_shadow_mask_mode(shmask_type) > 0)
 				{
-					snprintf(Selected_tmp, sizeof(Selected_tmp), SMASK_DIR"/%s", video_get_shadow_mask(0));
+					snprintf(Selected_tmp, sizeof(Selected_tmp), SMASK_DIR"/%s", video_get_shadow_mask(shmask_type, 0));
 					if (!FileExists(Selected_tmp)) snprintf(Selected_tmp, sizeof(Selected_tmp), SMASK_DIR);
 					SelectFile(Selected_tmp, 0, SCANO_DIR | SCANO_TXT, MENU_SMASK_FILE_SELECTED, parentstate);
 				}
 				break;
 
-			case 13:
+			case 15:
 				video_cfg_reset();
 				menustate = parentstate;
 				break;
 
-			case 14:
+			case 16:
 				menusub = 6;
 				menustate = MENU_COMMON1;
 				break;
@@ -3665,12 +3682,12 @@ void HandleUI(void)
 	case MENU_SMASK_FILE_SELECTED:
 		{
 			char *p = strcasestr(selPath, SMASK_DIR"/");
-			if (!p) video_set_shadow_mask(selPath);
+			if (!p) video_set_shadow_mask(shmask_type, selPath);
 			else
 			{
 				p += strlen(SMASK_DIR);
 				while (*p == '/') p++;
-				video_set_shadow_mask(p);
+				video_set_shadow_mask(shmask_type, p);
 			}
 			menustate = MENU_VIDEOPROC1;
 		}

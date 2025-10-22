@@ -55,6 +55,7 @@ typedef struct {
 	uint8_t logo;
 	uint8_t log_file_entry;
 	uint8_t shmask_mode_default;
+  uint8_t shmask_interlaced_mode_default;
 	int bt_auto_disconnect;
 	int bt_reset_before_pair;
 	char bootcore[256];
@@ -101,6 +102,7 @@ typedef struct {
 	uint8_t lookahead;
 	char main[1024];
 	char vfilter_interlace_default[1023];
+  char shmask_interlace_default[1023];
 } cfg_t;
 
 extern cfg_t cfg;
