@@ -788,7 +788,14 @@ static void loadGammaCfg()
 	}
 }
 
-static char shadow_mask_cfg[1024] = { 0 };
+
+struct ShadowMask
+{
+	char mode;
+	char filename[1023];
+};
+
+static ShadowMask shadow_masks[2];
 static bool has_shadow_mask = false;
 
 #define SM_FLAG_2X      ( 1 << 1 )
@@ -807,6 +814,7 @@ enum
 	SM_MODE_2X,
 	SM_MODE_1X_ROTATED,
 	SM_MODE_2X_ROTATED,
+  SM_MODE_SAME,
 	SM_MODE_COUNT
 };
 
@@ -814,7 +822,9 @@ static void setShadowMask()
 {
 	PROFILE_FUNCTION();
 
-	static char filename[1024];
+	static char filename[1023];
+  int mask_type = current_video_info.interlaced ? SHMASK_ILACE : SHMASK_STD;
+  if (video_get_shadow_mask_mode(mask_type) == SM_MODE_SAME) mask_type = SHMASK_STD;
 	has_shadow_mask = 0;
 
 	if (!spi_uio_cmd_cont(UIO_SHADOWMASK))
@@ -824,7 +834,7 @@ static void setShadowMask()
 	}
 
 	has_shadow_mask = 1;
-	switch (video_get_shadow_mask_mode())
+	switch (video_get_shadow_mask_mode(mask_type))
 	{
 		default: spi_w(SM_FLAG(0)); break;
 		case SM_MODE_1X: spi_w(SM_FLAG(SM_FLAG_ENABLED)); break;
@@ -834,7 +844,8 @@ static void setShadowMask()
 	}
 
 	int loaded = 0;
-	snprintf(filename, sizeof(filename), SMASK_DIR"/%s", shadow_mask_cfg + 1);
+  ShadowMask config = shadow_masks[mask_type];
+  snprintf(filename, sizeof(filename), SMASK_DIR"/%s", config.filename);
 
 	fileTextReader reader;
 	if (FileOpenTextReader(&reader, filename))
@@ -913,14 +924,14 @@ static void setShadowMask()
 	DisableIO();
 }
 
-int video_get_shadow_mask_mode()
+int video_get_shadow_mask_mode(int type)
 {
-	return has_shadow_mask ? shadow_mask_cfg[0] : -1;
+	return has_shadow_mask ? shadow_masks[type].mode : -1;
 }
 
-char* video_get_shadow_mask(int only_name)
+char* video_get_shadow_mask(int type, int only_name)
 {
-	char *path = shadow_mask_cfg + 1;
+	char *path = shadow_masks[type].filename;
 	if (only_name)
 	{
 		char *p = strrchr(path, '/');
@@ -933,40 +944,42 @@ static char shadow_mask_cfg_path[1024] = { 0 };
 
 static void video_save_shadow_mask_cfg()
 {
-	FileSaveConfig(shadow_mask_cfg_path, &shadow_mask_cfg, sizeof(shadow_mask_cfg));
+    FileSaveConfig(shadow_mask_cfg_path, &shadow_masks, sizeof(shadow_masks));
 }
 
-static void video_apply_shadow_mask_mode(int n)
+static void video_apply_shadow_mask_mode(int type, int n)
 {
-	if( n >= SM_MODE_COUNT )
-	{
-		n = 0;
-	}
-	else if (n < 0)
-	{
-		n = SM_MODE_COUNT - 1;
-	}
+  if (type == SHMASK_ILACE)
+  {
+      if(n >= SM_MODE_COUNT) n = 0;
+      else if (n < 0) n = SM_MODE_COUNT - 1;
+  }
+  else
+  {
+      if(n >= (SM_MODE_COUNT - 1)) n = 0;
+      else if (n < 0) n = SM_MODE_COUNT - 2;
+  }
 
-	shadow_mask_cfg[0] = (char)n;
+  shadow_masks[type].mode = (char)n;
 	setShadowMask();
 }
 
-void video_set_shadow_mask_mode(int n)
+void video_set_shadow_mask_mode(int type, int n)
 {
-	video_apply_shadow_mask_mode(n);
+	video_apply_shadow_mask_mode(type, n);
 	video_save_shadow_mask_cfg();
 }
 
-static void video_apply_shadow_mask(const char *name)
+static void video_apply_shadow_mask(int type, const char *name)
 {
-	strcpy(shadow_mask_cfg + 1, name);
+  strcpy(shadow_masks[type].filename, name);
 	setShadowMask();
 	user_io_send_buttons(1);
 }
 
-void video_set_shadow_mask(const char *name)
+void video_set_shadow_mask(int type, const char *name)
 {
-	video_apply_shadow_mask(name);
+	video_apply_shadow_mask(type, name);
 	video_save_shadow_mask_cfg();
 }
 
@@ -974,18 +987,29 @@ static void loadShadowMaskCfg()
 {
 	PROFILE_FUNCTION();
 
-	if (!FileLoadConfig(shadow_mask_cfg_path, &shadow_mask_cfg, sizeof(shadow_mask_cfg) - 1))
+	if (!FileLoadConfig(shadow_mask_cfg_path, &shadow_masks, sizeof(shadow_masks) - 1))
 	{
 		if (cfg.shmask_default[0])
 		{
-			strcpy(shadow_mask_cfg + 1, cfg.shmask_default);
-			shadow_mask_cfg[0] = cfg.shmask_mode_default;
+			strcpy(shadow_masks[SHMASK_STD].filename, cfg.shmask_default);
+			shadow_masks[SHMASK_STD].mode = cfg.shmask_mode_default;
 		}
+
+    if (cfg.shmask_interlace_default[0])
+    {
+      strcpy(shadow_masks[SHMASK_ILACE].filename, cfg.shmask_interlace_default);
+			shadow_masks[SHMASK_ILACE].mode = cfg.shmask_interlaced_mode_default;
+    }
 	}
 
-	if( shadow_mask_cfg[0] >= SM_MODE_COUNT )
+	if (shadow_masks[SHMASK_STD].mode >= (SM_MODE_COUNT-1))
 	{
-		shadow_mask_cfg[0] = 0;
+		shadow_masks[SHMASK_STD].mode = SM_MODE_NONE;
+	}
+
+  if (shadow_masks[SHMASK_ILACE].mode >= SM_MODE_COUNT)
+	{
+		shadow_masks[SHMASK_ILACE].mode = SM_MODE_SAME;
 	}
 }
 
@@ -1062,27 +1086,30 @@ void video_loadPreset(char *name, bool save)
 				load_flt_pres(line + 8, VFILTER_ILACE);
 				scaler_dirty = true;
 			}
-			else if (!strncasecmp(line, "mask=", 5))
+			else if (!strncasecmp(line, "mask=", 5) || !strncasecmp(line, "imask=", 6))
 			{
-				mask_dirty = true;
-				arg = get_preset_arg(line + 5);
+        mask_dirty = true;
+        int mask_type = line[0] == 'i' ? SHMASK_ILACE : SHMASK_STD;
+				arg = get_preset_arg(line + (mask_type == SHMASK_STD ? 5 : 6));
 				if (arg[0])
 				{
-					if (!strcasecmp(arg, "off") || !strcasecmp(arg, "none")) video_apply_shadow_mask_mode(0);
-					else video_apply_shadow_mask(arg);
+					if (!strcasecmp(arg, "off") || !strcasecmp(arg, "none")) video_apply_shadow_mask_mode(mask_type, SM_MODE_NONE);
+					else video_apply_shadow_mask(mask_type, arg);
 				}
 			}
-			else if (!strncasecmp(line, "maskmode=", 9))
+			else if (!strncasecmp(line, "maskmode=", 9) || !strncasecmp(line, "imaskmode=", 10))
 			{
-				mask_dirty = true;
-				arg = get_preset_arg(line + 9);
+        mask_dirty = true;
+        int mask_type = line[0] == 'i' ? SHMASK_ILACE : SHMASK_STD;
+				arg = get_preset_arg(line + (mask_type == SHMASK_STD ? 9 : 10));
 				if (arg[0])
 				{
-					if (!strcasecmp(arg, "off") || !strcasecmp(arg, "none")) video_apply_shadow_mask_mode(0);
-					else if (!strcasecmp(arg, "1x")) video_apply_shadow_mask_mode(SM_MODE_1X);
-					else if (!strcasecmp(arg, "2x")) video_apply_shadow_mask_mode(SM_MODE_2X);
-					else if (!strcasecmp(arg, "1x rotated")) video_apply_shadow_mask_mode(SM_MODE_1X_ROTATED);
-					else if (!strcasecmp(arg, "2x rotated")) video_apply_shadow_mask_mode(SM_MODE_2X_ROTATED);
+					if (!strcasecmp(arg, "off") || !strcasecmp(arg, "none") || (mask_type == SHMASK_STD && !strcasecmp(arg, "same"))) video_apply_shadow_mask_mode(mask_type, SM_MODE_NONE);
+					else if (!strcasecmp(arg, "1x")) video_apply_shadow_mask_mode(mask_type, SM_MODE_1X);
+					else if (!strcasecmp(arg, "2x")) video_apply_shadow_mask_mode(mask_type, SM_MODE_2X);
+					else if (!strcasecmp(arg, "1x rotated")) video_apply_shadow_mask_mode(mask_type, SM_MODE_1X_ROTATED);
+					else if (!strcasecmp(arg, "2x rotated")) video_apply_shadow_mask_mode(mask_type, SM_MODE_2X_ROTATED);
+          else if (!strcasecmp(arg, "same")) video_apply_shadow_mask_mode(mask_type, SM_MODE_SAME);
 				}
 			}
 			else if (!strncasecmp(line, "gamma=", 6))
@@ -2524,7 +2551,7 @@ static void video_cfg_init()
 
 	memset(gamma_cfg, 0, sizeof(gamma_cfg));
 	memset(scaler_flt, 0, sizeof(scaler_flt));
-	memset(shadow_mask_cfg, 0, sizeof(shadow_mask_cfg));
+	memset(shadow_masks, 0, sizeof(shadow_masks));
 
 	if (cfg.preset_default[0])
 	{
@@ -3100,6 +3127,7 @@ void video_mode_adjust()
 		else
 		{
 			set_vfilter(1); // force update filters in case interlacing changed
+      setShadowMask();
 		}
 
 		video_scaling_adjust(&video_info, &v_cur);
@@ -3107,6 +3135,7 @@ void video_mode_adjust()
 	else
 	{
 		set_vfilter(0); // update filters if flags have changed
+    setShadowMask();
 	}
 }
 
@@ -4055,5 +4084,3 @@ int video_get_rotated()
 {
   return current_video_info.rotated;
 }
-
-

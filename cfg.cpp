@@ -133,8 +133,10 @@ static const ini_var_t ini_vars[] =
 	{ "DEBUG", (void *)(&(cfg.debug)), UINT8, 0, 1 },
 	{ "LOOKAHEAD", (void *)(&(cfg.lookahead)), UINT8, 0, 3 },
 	{ "MAIN", (void*)(&(cfg.main)), STRING, 0, sizeof(cfg.main) - 1 },
-	{"VFILTER_INTERLACE_DEFAULT", (void*)(&(cfg.vfilter_interlace_default)), STRING, 0, sizeof(cfg.vfilter_interlace_default) - 1 },
+	{ "VFILTER_INTERLACE_DEFAULT", (void*)(&(cfg.vfilter_interlace_default)), STRING, 0, sizeof(cfg.vfilter_interlace_default) - 1 },
   { "OSD_JOYPAD_MASK", (void *)(&(cfg.osd_joypad_mask)), UINT8, 0, 255 },
+  { "SHMASK_INTERLACE_DEFAULT", (void*)(&(cfg.shmask_interlace_default)), STRING, 0, sizeof(cfg.shmask_interlace_default) - 1 },
+  { "SHMASK_INTL_MODE_DEFAULT", (void*)(&(cfg.shmask_interlaced_mode_default)), UINT8, 0, 255 },
 };
 
 static const int nvars = (int)(sizeof(ini_vars) / sizeof(ini_var_t));
