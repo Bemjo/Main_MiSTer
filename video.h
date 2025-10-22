@@ -6,6 +6,9 @@
 #define VFILTER_SCAN  2
 #define VFILTER_ILACE 3
 
+#define SHMASK_STD    0
+#define SHMASK_ILACE  1
+
 struct VideoInfo
 {
 	uint32_t width;
@@ -37,17 +40,15 @@ void  video_set_scaler_flt(int type, int n);
 char* video_get_scaler_coeff(int type, int only_name = 1);
 void  video_set_scaler_coeff(int type, const char *name);
 
-
-
 int   video_get_gamma_en();
 void  video_set_gamma_en(int n);
 char* video_get_gamma_curve(int only_name = 1);
 void  video_set_gamma_curve(const char *name);
 
-int   video_get_shadow_mask_mode();
-void  video_set_shadow_mask_mode(int n);
-char* video_get_shadow_mask(int only_name = 1);
-void  video_set_shadow_mask(const char *name);
+int   video_get_shadow_mask_mode(int type);
+void  video_set_shadow_mask_mode(int type, int n);
+char* video_get_shadow_mask(int type, int only_name = 1);
+void  video_set_shadow_mask(int type, const char *name);
 void  video_loadPreset(char *name, bool save);
 
 int   video_get_rotated();
