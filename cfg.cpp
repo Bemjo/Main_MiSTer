@@ -134,6 +134,7 @@ static const ini_var_t ini_vars[] =
 	{ "LOOKAHEAD", (void *)(&(cfg.lookahead)), UINT8, 0, 3 },
 	{ "MAIN", (void*)(&(cfg.main)), STRING, 0, sizeof(cfg.main) - 1 },
 	{ "VFILTER_INTERLACE_DEFAULT", (void*)(&(cfg.vfilter_interlace_default)), STRING, 0, sizeof(cfg.vfilter_interlace_default) - 1 },
+  { "ENABLE_CORE_OSD_INFO", (void *)(&(cfg.enable_core_osd_info)), UINT8, 0, 1 },
   { "OSD_JOYPAD_MASK", (void *)(&(cfg.osd_joypad_mask)), UINT8, 0, 255 },
   { "SHMASK_INTERLACE_DEFAULT", (void*)(&(cfg.shmask_interlace_default)), STRING, 0, sizeof(cfg.shmask_interlace_default) - 1 },
   { "SHMASK_INTL_MODE_DEFAULT", (void*)(&(cfg.shmask_interlaced_mode_default)), UINT8, 0, 255 },
@@ -594,6 +595,7 @@ void cfg_parse()
 	cfg.video_contrast = 50;
 	cfg.video_saturation = 100;
 	cfg.video_hue = 0;
+  cfg.enable_core_osd_info = 1;
   cfg.enable_config_shortcuts = 1;
   cfg.osd_joypad_mask = 0xFF;
 	strcpy(cfg.video_gain_offset, "1, 0, 1, 0, 1, 0");
