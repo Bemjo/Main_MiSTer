@@ -3574,8 +3574,11 @@ void user_io_poll()
 
 		keyboard_leds = leds;
 
-		uint8_t info_n = spi_uio_cmd(UIO_INFO_GET);
-		if (info_n) show_core_info(info_n);
+    if (cfg.enable_core_osd_info)
+    {
+		  uint8_t info_n = spi_uio_cmd(UIO_INFO_GET);
+		  if (info_n) show_core_info(info_n);
+    }
 	}
 
 	if (!res_timer)

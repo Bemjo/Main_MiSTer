@@ -102,6 +102,7 @@ typedef struct {
 	uint8_t lookahead;
 	char main[1024];
 	char vfilter_interlace_default[1023];
+  uint8_t enable_core_osd_info;
   uint8_t enable_config_shortcuts;
   uint8_t osd_joypad_mask;
   char shmask_interlace_default[1023];
