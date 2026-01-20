@@ -1125,6 +1125,7 @@ int GetUARTMode()
 	if (!stat("/tmp/uartmode3", &filestat)) return 3;
 	if (!stat("/tmp/uartmode4", &filestat)) return 4;
 	if (!stat("/tmp/uartmode5", &filestat)) return 5;
+  if (!stat("/tmp/uartmode6", &filestat)) return 6;
 	return 0;
 }
 
@@ -3204,7 +3205,7 @@ void user_io_poll()
 			else if (is_n64() && n64_process_save(use_save, op, lba, blksz, ack, buffer_lba[disk], buffer[disk], sizeof(*buffer), sz))
 			{
 				// Handled by N64 core logic.
-				// If n64_process_save returns false (e.g. use_save is off, or unsupported op), 
+				// If n64_process_save returns false (e.g. use_save is off, or unsupported op),
 				// it will fall through to the generic handler below.
 			}
 			else if (op == 2)
