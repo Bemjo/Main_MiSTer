@@ -596,7 +596,7 @@ void cfg_parse()
 	cfg.rumble = 1;
 	cfg.wheel_force = 50;
 	cfg.dvi_mode = 2;
-	cfg.hdmi_cec = 1;
+	cfg.hdmi_cec = 0;
 	cfg.hdmi_cec_sleep = 0;
 	cfg.hdmi_cec_wake = 0;
 	cfg.lookahead = 2;
