@@ -67,6 +67,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "str_util.h"
 #include "autofire.h"
 
+#define JAGCD_DIR "JaguarCD"
+
 /*menu states*/
 enum MENU
 {
@@ -426,8 +428,9 @@ void SelectFile(const char* path, const char* pFileExt, int Options, unsigned ch
 	else
 	{
 		const char *home = is_menu() ? "Scripts" : user_io_get_core_path(
-			(is_pce() && !strncasecmp(pFileExt, "CUE", 3)) ? PCECD_DIR :
-			(is_neogeo() && !strncasecmp(pFileExt, "CUE", 3)) ? NEOCD_DIR :
+			(is_pce() && (!strncasecmp(pFileExt, "CUE", 3) || !strncasecmp(pFileExt, "CHD", 3))) ? PCECD_DIR :
+			(is_neogeo() && (!strncasecmp(pFileExt, "CUE", 3) || !strncasecmp(pFileExt, "CHD", 3))) ? NEOCD_DIR :
+      (is_jaguar() && (!strncasecmp(pFileExt, "CUE", 3) || !strncasecmp(pFileExt, "CDI", 3))) ? JAGCD_DIR :
 			NULL, 1);
 		home_dir = strrchr(home, '/');
 		if (home_dir) home_dir++;
@@ -2660,7 +2663,7 @@ void HandleUI(void)
 			if (!mgl->done)
 			{
 				if (mgl->item[mgl->current].path[0] == '/') snprintf(selPath, sizeof(selPath), "%s", mgl->item[mgl->current].path);
-				else snprintf(selPath, sizeof(selPath), "%s/%s", HomeDir(((is_pce() && !strncasecmp(fs_pFileExt, "CUE", 3)) ? PCECD_DIR : NULL)), mgl->item[mgl->current].path);
+				else snprintf(selPath, sizeof(selPath), "%s/%s", HomeDir(((is_pce() && (!strncasecmp(fs_pFileExt, "CUE", 3) || !strncasecmp(fs_pFileExt, "CHD", 3))) ? PCECD_DIR : ((is_jaguar() && (!strncasecmp(fs_pFileExt, "CUE", 3) || !strncasecmp(fs_pFileExt, "CDI", 3))) ? JAGCD_DIR : NULL))), mgl->item[mgl->current].path);
 
 				// Update /tmp/ files to reflect the actual image being loaded by MGL
 				if (cfg.log_file_entry)

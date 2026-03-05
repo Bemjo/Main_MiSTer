@@ -280,6 +280,13 @@ char is_archie()
 	return (is_archie_type == 1);
 }
 
+static int is_jaguar_type = 0;
+char is_jaguar()
+{
+  if (!is_jaguar_type) is_jaguar_type = strcasecmp(orig_name, "JAGUAR") ? 2 : 1;
+	return (is_jaguar_type == 1);
+}
+
 static int is_pcxt_type = 0;
 char is_pcxt()
 {
